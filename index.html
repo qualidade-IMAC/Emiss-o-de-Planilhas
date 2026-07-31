@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Emissão de Planilhas IMAC - Dinâmico</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @media print {
             @page {
@@ -93,33 +92,34 @@
             .action-btns { display: none; }
             #editModal { display: none !important; }
         }
+        
+        /* Oculta a barra de rolagem horizontal nativa para as abas de setores */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="bg-[#F9F9FB] font-sans text-gray-800 overflow-hidden h-screen dashboard-wrapper flex">
 
     <!-- SIDEBAR LATERAL FIXA -->
-    <aside class="w-64 bg-[#5C3A21] flex-shrink-0 flex flex-col no-print text-white shadow-xl z-20">
-        <div class="p-6 flex items-center justify-center border-b border-[#6E482D] bg-[#54341e]">
-            <img src="logo.png" alt="IMAC Logo" class="h-14 object-contain">
+    <aside id="sidebar" class="w-64 bg-[#5C3A21] flex-shrink-0 flex flex-col no-print text-white shadow-xl z-20 transition-all duration-300">
+        <div class="p-6 flex items-center justify-center border-b border-[#6E482D] bg-[#54341e] h-20 overflow-hidden">
+            <img id="logo-img" src="logo.png" onerror="this.src='https://placehold.co/200x80/54341e/ffffff?text=IMAC'" alt="IMAC Logo" class="h-14 object-contain transition-all duration-300">
         </div>
-        <nav class="flex-1 px-4 py-8 space-y-3">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-[#F2B922] text-[#5C3A21] rounded-xl font-bold shadow-md transition-transform hover:scale-105">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                Gerador de Planilhas
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-[#E0C6B3] hover:bg-[#6E482D] hover:text-white rounded-xl font-medium transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                Fichas Técnicas
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-[#E0C6B3] hover:bg-[#6E482D] hover:text-white rounded-xl font-medium transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                Ingredientes
+        <nav class="flex-1 px-4 py-8 space-y-3 overflow-hidden">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-[#F2B922] text-[#5C3A21] rounded-xl font-bold shadow-md transition-transform hover:scale-105 whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span class="sidebar-text transition-opacity duration-300">Gerador de Planilhas</span>
             </a>
         </nav>
-        <div class="p-6 border-t border-[#6E482D]">
-            <button class="flex items-center gap-2 text-[#E0C6B3] hover:text-white transition-colors text-sm font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> 
-                Recolher Menu
+        <div class="p-4 border-t border-[#6E482D] flex justify-center items-center">
+            <button onclick="toggleSidebar()" class="flex items-center gap-2 text-[#E0C6B3] hover:text-white transition-colors text-sm font-medium w-full overflow-hidden">
+                <svg id="arrow-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> 
+                <span class="sidebar-text transition-opacity duration-300 whitespace-nowrap">Recolher Menu</span>
             </button>
         </div>
     </aside>
@@ -198,7 +198,9 @@
                             </select>
                             <div class="flex gap-2">
                                 <input type="text" id="newSheetPopTitle" placeholder="Ex: POP X - NOME" class="w-full border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:border-[#F2B922] outline-none">
-                                <input type="text" id="newSheetSector" placeholder="Ex: SETOR" class="w-1/3 border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:border-[#F2B922] outline-none">
+                                <select id="newSheetSector" class="w-1/3 border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:border-[#F2B922] outline-none cursor-pointer bg-white">
+                                    <!-- Options serão carregadas via JS baseado na lista oficial de setores -->
+                                </select>
                                 <button onclick="addNewSheet()" class="bg-[#F2B922] hover:bg-[#e0a91e] text-[#5C3A21] font-extrabold px-3 rounded-xl text-lg transition-transform hover:scale-105 shadow-sm shrink-0">
                                     +
                                 </button>
@@ -210,23 +212,26 @@
                     <div class="xl:border-l xl:border-gray-200 xl:pl-8">
                         <h3 class="text-[#5C3A21] font-bold text-base mb-4 flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#F2B922]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                            Ações / Exportar
+                            Imprimir Planilhas
                         </h3>
                         <div class="flex flex-col gap-2">
-                            <button onclick="window.print()" class="w-full bg-[#5C3A21] hover:bg-[#4a2e1a] text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all duration-200 flex justify-center items-center gap-2 text-sm">
+                            <button onclick="printAllSheets()" class="w-full bg-[#5C3A21] hover:bg-[#4a2e1a] text-white font-bold py-2 px-4 rounded-xl shadow-md transition-all duration-200 flex justify-center items-center gap-2 text-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                Imprimir / Gerar PDF
+                                Imprimir TODAS Juntas
                             </button>
-                            <div class="flex gap-2">
-                                <button onclick="exportToExcel()" class="flex-1 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold py-2 px-3 rounded-xl transition duration-200 flex justify-center items-center gap-1 text-sm shadow-sm">
-                                    Excel
-                                </button>
-                                <button onclick="exportToWord()" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold py-2 px-3 rounded-xl transition duration-200 flex justify-center items-center gap-1 text-sm shadow-sm">
-                                    Word
-                                </button>
-                            </div>
+                            <button onclick="window.print()" class="w-full bg-white hover:bg-gray-50 text-[#5C3A21] border-2 border-[#5C3A21] font-bold py-2 px-4 rounded-xl shadow-sm transition-all duration-200 flex justify-center items-center gap-2 text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                Imprimir Setor Atual
+                            </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- TABS DE SETORES (BARRA ROLÁVEL) -->
+            <div class="mb-6 overflow-x-auto no-scrollbar no-print pb-2">
+                <div class="flex gap-2 min-w-max" id="sector-tabs">
+                    <!-- As abas dos setores serão renderizadas aqui pelo Javascript -->
                 </div>
             </div>
 
@@ -272,7 +277,18 @@
     </div>
 
     <script>
-        // Define the initial state based on the provided images
+        // Array contendo todos os setores oficiais
+        const SYSTEM_SECTORS = [
+            'Confeitaria', 'Salgado', 'Produção', 'Pão de Queijo',
+            'Embaladora Dia', 'Embaladora Noite', 'Expedição Dia',
+            'Expedição Noite', 'Pré - Assados', 'Estoque',
+            'Pré - Pesagem Lacteos', 'Pré - Pesagem FLV',
+            'Pré - Pesagem Pão de Queijo', 'Pré - Pesagem Secos',
+            'Serviços Gerais'
+        ];
+        let activeSector = 'Todos'; // Setor selecionado no momento
+
+        // Define o estado inicial da aplicação com as planilhas padronizadas aos setores
         let sheetsConfig = [
             {
                 id: 'sheet_1',
@@ -280,7 +296,7 @@
                 popTitle: 'POP 1 - HIGIENIZAÇÃO DE EQUIPAMENTOS E UTENSILIOS',
                 popNumber: 'POP 1',
                 anexoInfo: 'ANEXO 1<br>2026',
-                sector: 'PÃO DE QUEIJO',
+                sector: 'Pão de Queijo',
                 items: [
                     { name: 'MASSEIRA', freq: 'DIÁRIA' },
                     { name: 'EXTRUSORA', freq: 'DIÁRIA' },
@@ -301,11 +317,11 @@
             },
             {
                 id: 'sheet_2',
-                type: 'pragas31', // Agora este tipo gera FRENTE e VERSO automaticamente
+                type: 'pragas31',
                 popTitle: 'POP 4 - CONTROLE INTEGRADO DE VETORES E PRAGAS URBANAS<br>ACOMPANHAMENTO DE VETORES E PRAGAS.',
                 popNumber: 'POP 4',
                 anexoInfo: 'ANEXO 1<br>2026',
-                sector: 'PÃO DE QUEIJO',
+                sector: 'Pão de Queijo',
                 items: ['Baratas', 'Escorpião', 'Ratos', 'Moscas', 'Formigas', 'Aranhas', 'Traças', 'Carunchos', 'Pássaros', 'Besouros'],
                 dateFormat: 'mes_barra_ano' // AGOSTO/2026
             },
@@ -315,7 +331,7 @@
                 popTitle: 'POP 1 - HIGIENIZAÇÃO DE EQUIPAMENTOS E ULTENSILIOS',
                 popNumber: 'POP 1',
                 anexoInfo: 'DATA: ________',
-                sector: 'PRÉ-ASSADOS',
+                sector: 'Pré - Assados',
                 items: [
                     { name: 'BALANÇAS', freq: 'DIÁRIA' },
                     { name: 'MESAS', freq: 'DIÁRIA' },
@@ -345,7 +361,7 @@
                 popTitle: 'POP 9 - CONTROLE DE TEMPERATURA<br>ACOMPANHAMENTO DA TEMPERATURA',
                 popNumber: 'POP 9',
                 anexoInfo: 'ANEXO 1<br>2025',
-                sector: 'PRE-ASSADO',
+                sector: 'Pré - Assados',
                 tempInfo: [
                     { label: 'Temperatura Resfriado', range: '0°C a 10°C' },
                     { label: 'Temperatura Ambiente', range: '10 á 16°C' }
@@ -376,7 +392,7 @@
                 popTitle: 'POP 4 - CONTROLE INTEGRADO DE VETORES E PRAGAS URBANAS<br>ACOMPANHAMENTO DE VETORES E PRAGAS.',
                 popNumber: 'POP 4',
                 anexoInfo: 'ANEXO 1<br>2026',
-                sector: 'Pré- Assados',
+                sector: 'Pré - Assados',
                 items: ['Baratas', 'Escorpião', 'Ratos', 'Moscas', 'Formigas', 'Aranhas', 'Traças', 'Carunchos', 'Pássaros', 'Besouros', 'Mosquito', 'Abelhas', 'Tesourinha', 'Visto'],
                 dateFormat: 'mes_barra_ano'
             },
@@ -386,7 +402,7 @@
                 popTitle: 'POP 1 - HIGIENIZAÇÃO DE EQUIPAMENTOS E ULTENSILIOS',
                 popNumber: 'POP 1',
                 anexoInfo: 'ANEXO 1<br>2026',
-                sector: 'PRÉ PESAGEM',
+                sector: 'Pré - Pesagem Secos',
                 items: [
                     { name: 'BALANÇA 1', freq: 'DIÁRIO' }, { name: 'BALANÇA 2', freq: 'DIÁRIO' },
                     { name: 'BALANÇA 3', freq: 'DIÁRIO' }, { name: 'BALANÇA 4', freq: 'DIÁRIO' },
@@ -407,7 +423,7 @@
                 popTitle: 'POP 9 - CONTROLE DE TEMPERATURA<br>ACOMPANHAMENTO DA TEMPERATURA',
                 popNumber: 'POP 9',
                 anexoInfo: 'ANEXO 1<br>2026',
-                sector: 'Pré Pesagem/ Estoque',
+                sector: 'Estoque',
                 tempInfo: [
                     { label: 'Freezer Congelado', range: '- 22°C a 0°C' },
                     { label: 'Freezer Resfriado', range: '0°C a 10°C' }
@@ -423,7 +439,7 @@
                 popTitle: 'POP 9 - CONTROLE DE TEMPERATURA<br>ACOMPANHAMENTO DA TEMPERATURA',
                 popNumber: 'POP 9',
                 anexoInfo: 'ANEXO 1<br>2026',
-                sector: 'Pré Pesagem/ Estoque',
+                sector: 'Estoque',
                 tempInfo: [
                     { label: 'Freezer Congelado', range: '- 22°C a 0°C' },
                     { label: 'Freezer Resfriado', range: '0°C a 10°C' }
@@ -434,7 +450,82 @@
             }
         ];
 
-        
+        // --- FUNÇÃO PARA RECOLHER A BARRA LATERAL ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const textElements = document.querySelectorAll('.sidebar-text');
+            const arrowIcon = document.getElementById('arrow-icon');
+            const logo = document.getElementById('logo-img');
+            
+            // Verifica se a barra está expandida (usando a classe w-64)
+            if (sidebar.classList.contains('w-64')) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20'); // Recolhe para um tamanho menor
+                textElements.forEach(el => el.classList.add('hidden')); // Esconde textos
+                arrowIcon.style.transform = 'rotate(180deg)'; // Gira a seta
+                if(logo) {
+                    logo.classList.remove('h-14');
+                    logo.classList.add('h-8'); // Diminui logo
+                }
+            } else {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64'); // Expande novamente
+                textElements.forEach(el => el.classList.remove('hidden')); // Mostra textos
+                arrowIcon.style.transform = 'rotate(0deg)'; // Volta a seta
+                if(logo) {
+                    logo.classList.remove('h-8');
+                    logo.classList.add('h-14'); // Restaura logo
+                }
+            }
+        }
+
+        // --- SISTEMA DE ABAS (SETORES) ---
+        function renderSectorTabs() {
+            const tabsContainer = document.getElementById('sector-tabs');
+            tabsContainer.innerHTML = '';
+
+            // Aba "Todos"
+            const allBtn = document.createElement('button');
+            allBtn.className = `px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors shadow-sm ${activeSector === 'Todos' ? 'bg-[#5C3A21] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`;
+            allBtn.innerText = 'Todos os Setores';
+            allBtn.onclick = () => selectSector('Todos');
+            tabsContainer.appendChild(allBtn);
+
+            // Abas Dinâmicas para cada Setor
+            SYSTEM_SECTORS.forEach(sec => {
+                const btn = document.createElement('button');
+                btn.className = `px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors shadow-sm ${activeSector === sec ? 'bg-[#F2B922] text-[#5C3A21]' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`;
+                btn.innerText = sec;
+                btn.onclick = () => selectSector(sec);
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        function selectSector(sectorName) {
+            activeSector = sectorName;
+            renderSectorTabs();
+            renderAllSheets();
+        }
+
+        function printAllSheets() {
+            const previousSector = activeSector;
+            // Muda a visualização para Todos
+            activeSector = 'Todos';
+            renderSectorTabs();
+            renderAllSheets();
+            
+            // Aguarda a renderização no DOM e depois puxa a janela de impressão
+            setTimeout(() => {
+                window.print();
+                
+                // Volta para o setor que o usuário estava vendo antes da impressão
+                activeSector = previousSector;
+                renderSectorTabs();
+                renderAllSheets();
+            }, 500); // 500ms é o suficiente para as imagens e fontes recarregarem
+        }
+
+
         function generateHeaderHTML(sheet) {
             // Limpa quebras de linha para o novo formato de cabeçalho
             const cleanTitle = sheet.popTitle.replace(/<br>/g, ' - ');
@@ -455,7 +546,7 @@
                 <div class="flex justify-between items-start mb-4">
                     <!-- Left: Logo & Quality Control -->
                     <div class="flex flex-col items-start gap-1">
-                        <img src="logo.png" alt="IMAC Logo" class="h-11 object-contain">
+                        <img src="logo.png" onerror="this.src='https://placehold.co/200x80/54341e/ffffff?text=IMAC'" alt="IMAC Logo" class="h-11 object-contain">
                         <span class="font-bold text-[11px] uppercase tracking-wider text-black">Controle de Qualidade</span>
                     </div>
 
@@ -590,7 +681,6 @@
             html += `</tr></thead><tbody>`;
             
             for(let i=0; i<sheet.rowsCount; i++) {
-                // h-8 em vez de h-10 para garantir que a lista caiba em 1 página perfeitamente
                 html += `<tr class="h-8">`;
                 sheet.columns.forEach(() => html += `<td></td>`);
                 html += `</tr>`;
@@ -719,7 +809,22 @@
             // Calcula quantos dias o mês e o ano selecionados possuem (trata anos bissextos automaticamente)
             const daysInMonth = new Date(year, monthNum + 1, 0).getDate();
 
-            sheetsConfig.forEach((sheet) => {
+            // Filtragem pelo Setor Selecionado
+            const filteredSheets = activeSector === 'Todos' 
+                ? sheetsConfig 
+                : sheetsConfig.filter(s => s.sector === activeSector);
+
+            if (filteredSheets.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-12 text-center w-full bg-white rounded-xl border border-gray-200 border-dashed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <h3 class="text-lg font-bold text-gray-700">Nenhuma planilha neste setor</h3>
+                        <p class="text-sm text-gray-500 mt-1">Adicione uma nova planilha e selecione o setor <b>${activeSector}</b>.</p>
+                    </div>`;
+                return;
+            }
+
+            filteredSheets.forEach((sheet) => {
                 if (sheet.type === 'pragas31') {
                     // --- GERA FRENTE (Cronograma) ---
                     const frontHTML = renderPragas31(sheet, daysInMonth);
@@ -757,7 +862,7 @@
         function addNewSheet() {
             const type = document.getElementById('newSheetType').value;
             const popTitle = document.getElementById('newSheetPopTitle').value || 'POP X - TÍTULO DO POP';
-            const sector = document.getElementById('newSheetSector').value || 'NOVO SETOR';
+            const sector = document.getElementById('newSheetSector').value;
             const newId = 'sheet_' + Date.now();
 
             let newSheet = {
@@ -791,10 +896,16 @@
             }
 
             sheetsConfig.push(newSheet);
-            renderAllSheets();
             
-            // Reset form slightly
-            document.getElementById('newSheetSector').value = '';
+            // Se eu criar uma planilha para um setor que não estou visualizando, eu mudo de aba pra ver ela
+            if (activeSector !== 'Todos' && activeSector !== sector) {
+                selectSector(sector);
+            } else {
+                renderAllSheets();
+            }
+            
+            // Limpa o título para facilitar inserir a próxima
+            document.getElementById('newSheetPopTitle').value = '';
         }
 
         function updateDates() {
@@ -835,7 +946,9 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Setor</label>
-                    <input type="text" id="editSector" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${sheet.sector}">
+                    <select id="editSector" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+                        ${SYSTEM_SECTORS.map(sec => `<option value="${sec}" ${sheet.sector === sec ? 'selected' : ''}>${sec}</option>`).join('')}
+                    </select>
                 </div>
             `;
             
@@ -944,116 +1057,27 @@
             renderAllSheets();
         }
 
-        // Initialization
+        // Inicia o sistema ao carregar a tela
         document.addEventListener('DOMContentLoaded', () => {
+            // Popula o Dropdown de Setores no painel de Adicionar Nova Planilha
+            const newSectorSelect = document.getElementById('newSheetSector');
+            SYSTEM_SECTORS.forEach(sec => {
+                const opt = document.createElement('option');
+                opt.value = sec;
+                opt.textContent = sec;
+                newSectorSelect.appendChild(opt);
+            });
+
+            // Inicializa as abas e renderiza as planilhas do momento (Todos)
+            renderSectorTabs();
             renderAllSheets();
             
-            // Agora, ao mudar a data, reconstruímos todas as planilhas para atualizar as colunas de dias!
+            // Recalcula datas e recria colunas do mês instantaneamente ao trocar o mês/ano
             document.getElementById('monthSelect').addEventListener('change', renderAllSheets);
             document.getElementById('yearInput').addEventListener('change', renderAllSheets);
             document.getElementById('yearInput').addEventListener('input', renderAllSheets);
         });
 
-        
-        function exportToExcel() {
-            // Cria um novo arquivo Excel em memória
-            const wb = XLSX.utils.book_new();
-            const sheetsContainers = document.querySelectorAll('.sheet-container');
-            
-            // Objeto para rastrear nomes de abas já utilizados e garantir unicidade
-            const usedNames = {}; 
-            
-            sheetsContainers.forEach((sheet, index) => {
-                // Pega o título do POP para nomear a aba do Excel
-                const titleEl = sheet.querySelector('h2');
-                let sheetName = titleEl ? titleEl.innerText.split('-')[0].trim() : `Planilha_${index + 1}`;
-                // Remove caracteres inválidos para nomes de abas no Excel
-                sheetName = sheetName.replace(/[\\/*?:\[\]]/g, '');
-                
-                // Encontra as tabelas dentro da planilha atual
-                const tables = sheet.querySelectorAll('table');
-                
-                tables.forEach((table, tIndex) => {
-                    // Clona a tabela para não afetar a interface visual
-                    const cloneTable = table.cloneNode(true);
-                    
-                    // Converte a tabela HTML para uma worksheet do Excel
-                    const ws = XLSX.utils.table_to_sheet(cloneTable);
-                    
-                    // Se houver mais de uma tabela na mesma página (ex: Temperaturas), adiciona um sufixo
-                    let desiredName = sheetName;
-                    if (tables.length > 1) {
-                        desiredName = `${sheetName}_T${tIndex + 1}`;
-                    }
-                    
-                    // Garante que o nome seja único e tenha no máximo 31 caracteres (limite do Excel)
-                    let finalSheetName = desiredName.substring(0, 31);
-                    let counter = 1;
-                    while (usedNames[finalSheetName]) {
-                        let suffix = `_${counter}`;
-                        finalSheetName = desiredName.substring(0, 31 - suffix.length) + suffix;
-                        counter++;
-                    }
-                    usedNames[finalSheetName] = true; // Marca este nome como usado
-                    
-                    // Adiciona a worksheet ao arquivo
-                    XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
-                });
-            });
-            
-            // Força o download do arquivo
-            XLSX.writeFile(wb, `Planilhas_Controle_Qualidade_IMAC.xlsx`);
-        }
-
-        function exportToWord() {
-            // Clona o container principal para podermos limpar botões sem sumir da tela
-            const content = document.getElementById('sheets-container').cloneNode(true);
-            
-            // Remove elementos que não devem ir pro Word (botões de deletar)
-            content.querySelectorAll('.no-print').forEach(el => el.remove());
-
-            // Cria um HTML básico que o Word entende (com estilos inline básicos, 
-            // pois o Word não carrega CSS externo/Tailwind corretamente)
-            const html = `
-                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-                <head>
-                    <meta charset='utf-8'>
-                    <title>Planilhas IMAC</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; font-size: 11px; }
-                        h2 { font-size: 14px; color: #000; font-weight: bold; margin-bottom: 5px; }
-                        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 9px; text-align: center; }
-                        th, td { border: 1px solid #000; padding: 3px; }
-                        th { background-color: #f2f2f2; font-weight: bold; }
-                        .sheet-container { page-break-after: always; margin-bottom: 20px; }
-                        .mb-4 { margin-bottom: 16px; }
-                        .mt-8 { margin-top: 32px; }
-                        /* Cores do cabeçalho */
-                        .bg-\\[\\#7A4B2D\\] { background-color: #7A4B2D; }
-                        .bg-\\[\\#f0f0f0\\] { background-color: #f0f0f0; }
-                    </style>
-                </head>
-                <body>
-                    ${content.innerHTML}
-                </body>
-                </html>
-            `;
-
-            // Transforma em um Blob do tipo Word (.doc)
-            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-            
-            // Cria um link temporário para iniciar o download
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Planilhas_Controle_Qualidade_IMAC.doc`;
-            document.body.appendChild(link);
-            link.click();
-            
-            // Limpa da memória
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
     </script>
 </body>
 </html>

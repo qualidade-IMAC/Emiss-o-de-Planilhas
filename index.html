@@ -60,95 +60,215 @@
             font-size: 0.8rem;
         }
         
+        /* Ajustes cruciais para impressão no novo layout de Dashboard */
+        @media print {
+            html, body, .dashboard-wrapper, .dashboard-main, main, #sheets-container {
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+                background-color: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+        }
+
         @media screen {
             .sheet-container {
                 width: 297mm;
                 min-height: 210mm;
                 position: relative;
             }
-            .delete-btn {
+            .action-btns {
                 position: absolute;
                 top: 10px;
                 right: 10px;
                 z-index: 20;
+                display: flex;
+                gap: 8px;
             }
         }
         /* Hidden on print */
         @media print {
-            .delete-btn { display: none; }
+            .action-btns { display: none; }
+            #editModal { display: none !important; }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+<body class="bg-[#F9F9FB] font-sans text-gray-800 overflow-hidden h-screen dashboard-wrapper flex">
 
-    <div class="no-print bg-white p-6 shadow-md mb-8 sticky top-0 z-50 border-b-4 border-blue-500">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">Gerador Dinâmico de Planilhas</h1>
-                <p class="text-sm text-gray-500">Configure as datas e adicione novas planilhas personalizadas.</p>
+    <!-- SIDEBAR LATERAL FIXA -->
+    <aside class="w-64 bg-[#5C3A21] flex-shrink-0 flex flex-col no-print text-white shadow-xl z-20">
+        <div class="p-6 flex items-center justify-center border-b border-[#6E482D] bg-[#54341e]">
+            <img src="logo.png" alt="IMAC Logo" class="h-14 object-contain">
+        </div>
+        <nav class="flex-1 px-4 py-8 space-y-3">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-[#F2B922] text-[#5C3A21] rounded-xl font-bold shadow-md transition-transform hover:scale-105">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                Gerador de Planilhas
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-[#E0C6B3] hover:bg-[#6E482D] hover:text-white rounded-xl font-medium transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Fichas Técnicas
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-[#E0C6B3] hover:bg-[#6E482D] hover:text-white rounded-xl font-medium transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                Ingredientes
+            </a>
+        </nav>
+        <div class="p-6 border-t border-[#6E482D]">
+            <button class="flex items-center gap-2 text-[#E0C6B3] hover:text-white transition-colors text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> 
+                Recolher Menu
+            </button>
+        </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <div class="flex-1 flex flex-col overflow-hidden dashboard-main relative">
+        
+        <!-- CABEÇALHO SUPERIOR -->
+        <header class="bg-white px-8 py-5 shadow-sm border-b border-gray-100 flex justify-between items-center no-print z-10 sticky top-0">
+            <h1 class="text-2xl font-extrabold text-[#5C3A21] flex items-center">
+                Visão Geral do Sistema 
+                <span class="text-gray-400 font-semibold text-lg ml-3 pl-3 border-l-2 border-gray-200">Emissão de Planilhas</span>
+            </h1>
+            
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden md:block">
+                    <div class="text-[13px] font-extrabold text-[#5C3A21] uppercase tracking-wide">Equipe Qualidade</div>
+                    <div class="text-xs text-gray-500 font-medium">IMAC Alimentos</div>
+                </div>
+                <div class="w-11 h-11 rounded-full bg-[#F2B922] flex items-center justify-center text-[#5C3A21] font-bold text-lg shadow-sm border-2 border-white ring-2 ring-gray-100">
+                    EQ
+                </div>
+            </div>
+        </header>
+
+        <!-- ÁREA COM SCROLL PARA AS PLANILHAS -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
+            
+            <!-- CARTÃO DE CONTROLES (Novo Design) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8 no-print">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    
+                    <!-- Col 1: Configuração de Datas -->
+                    <div>
+                        <h3 class="text-[#5C3A21] font-bold text-base mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#F2B922]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            Data Base das Planilhas
+                        </h3>
+                        <div class="flex gap-3">
+                            <div class="flex flex-col flex-1">
+                                <label for="monthSelect" class="text-[11px] font-bold text-gray-500 uppercase mb-1">Mês Global</label>
+                                <select id="monthSelect" class="border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:ring-0 focus:border-[#F2B922] bg-gray-50 hover:bg-white transition-colors outline-none cursor-pointer">
+                                    <option value="JANEIRO">Janeiro</option>
+                                    <option value="FEVEREIRO">Fevereiro</option>
+                                    <option value="MARÇO">Março</option>
+                                    <option value="ABRIL">Abril</option>
+                                    <option value="MAIO">Maio</option>
+                                    <option value="JUNHO">Junho</option>
+                                    <option value="JULHO">Julho</option>
+                                    <option value="AGOSTO">Agosto</option>
+                                    <option value="SETEMBRO">Setembro</option>
+                                    <option value="OUTUBRO">Outubro</option>
+                                    <option value="NOVEMBRO">Novembro</option>
+                                    <option value="DEZEMBRO">Dezembro</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col w-24">
+                                <label for="yearInput" class="text-[11px] font-bold text-gray-500 uppercase mb-1">Ano Global</label>
+                                <input type="number" id="yearInput" value="2026" class="border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:ring-0 focus:border-[#F2B922] bg-gray-50 hover:bg-white transition-colors outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Col 2: Adicionar Nova Planilha -->
+                    <div class="xl:border-l xl:border-gray-200 xl:pl-8">
+                        <h3 class="text-[#5C3A21] font-bold text-base mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#F2B922]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Adicionar Nova Planilha
+                        </h3>
+                        <div class="flex flex-col gap-3">
+                            <select id="newSheetType" class="w-full border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:ring-0 focus:border-[#F2B922] bg-gray-50 outline-none cursor-pointer">
+                                <option value="cronograma31">Cronograma 31 Dias (ex: Equipamentos)</option>
+                                <option value="pragas31">Pragas (Frente e Verso)</option>
+                                <option value="temperatura2">Temperatura (2 equipamentos)</option>
+                                <option value="listaVazia">Lista Vazia (Ocorrências)</option>
+                            </select>
+                            <div class="flex gap-2">
+                                <input type="text" id="newSheetPopTitle" placeholder="Ex: POP X - NOME" class="w-full border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:border-[#F2B922] outline-none">
+                                <input type="text" id="newSheetSector" placeholder="Ex: SETOR" class="w-1/3 border-2 border-gray-200 rounded-xl p-2 text-sm font-semibold text-gray-700 focus:border-[#F2B922] outline-none">
+                                <button onclick="addNewSheet()" class="bg-[#F2B922] hover:bg-[#e0a91e] text-[#5C3A21] font-extrabold px-3 rounded-xl text-lg transition-transform hover:scale-105 shadow-sm shrink-0">
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Col 3: Exportar e Imprimir -->
+                    <div class="xl:border-l xl:border-gray-200 xl:pl-8">
+                        <h3 class="text-[#5C3A21] font-bold text-base mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#F2B922]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                            Ações / Exportar
+                        </h3>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="window.print()" class="w-full bg-[#5C3A21] hover:bg-[#4a2e1a] text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all duration-200 flex justify-center items-center gap-2 text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                Imprimir / Gerar PDF
+                            </button>
+                            <div class="flex gap-2">
+                                <button onclick="exportToExcel()" class="flex-1 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold py-2 px-3 rounded-xl transition duration-200 flex justify-center items-center gap-1 text-sm shadow-sm">
+                                    Excel
+                                </button>
+                                <button onclick="exportToWord()" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold py-2 px-3 rounded-xl transition duration-200 flex justify-center items-center gap-1 text-sm shadow-sm">
+                                    Word
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTAINER DAS PLANILHAS -->
+            <div id="sheets-container" class="flex flex-col items-center gap-8 pb-10">
+                <!-- Rendered sheets will go here -->
             </div>
             
-            <div class="flex flex-wrap items-end gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <div class="flex flex-col mr-2">
-                    <label for="monthSelect" class="text-xs font-semibold text-gray-600 mb-1">Mês Global</label>
-                    <select id="monthSelect" class="border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 bg-white">
-                        <option value="JANEIRO">Janeiro</option>
-                        <option value="FEVEREIRO">Fevereiro</option>
-                        <option value="MARÇO">Março</option>
-                        <option value="ABRIL">Abril</option>
-                        <option value="MAIO">Maio</option>
-                <div class="flex flex-col mr-2">
-                    <label for="yearInput" class="text-xs font-semibold text-gray-600 mb-1">Ano Global</label>
-                    <input type="number" id="yearInput" value="2026" class="border border-gray-300 rounded p-2 text-sm w-24 focus:ring-blue-500 focus:border-blue-500 bg-white">
-                </div>
-                
-                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 h-10 text-sm" title="Exportar para Excel">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Excel
-                </button>
-
-                <button onclick="exportToWord()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 h-10 text-sm" title="Exportar para Word">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Word
-                </button>
-
-                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition duration-200 flex items-center gap-1 h-10 text-sm ml-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                    Imprimir / PDF
-                </button>
-            </div>
-        </div>
-
-        <!-- Add New Sheet Panel -->
-        <div class="mt-4 pt-4 border-t border-gray-200">
-            <h3 class="text-sm font-bold text-gray-700 mb-2">Adicionar Nova Planilha:</h3>
-            <div class="flex flex-wrap items-end gap-3">
-                <div class="w-full md:w-1/4">
-                    <label class="text-xs text-gray-500 block mb-1">Tipo de Template</label>
-                    <select id="newSheetType" class="w-full border border-gray-300 rounded p-1.5 text-sm bg-white">
-                        <option value="cronograma31">Cronograma 31 Dias (ex: Equipamentos)</option>
-                        <option value="pragas31">Pragas 31 Dias (ex: Setor)</option>
-                        <option value="temperatura2">Temperatura (2 equipamentos)</option>
-                        <option value="listaVazia">Lista Vazia (Assinaturas/Ocorrências)</option>
-                    </select>
-                </div>
-                <div class="w-full md:w-1/4">
-                    <label class="text-xs text-gray-500 block mb-1">Título do POP</label>
-                    <input type="text" id="newSheetPopTitle" placeholder="Ex: POP X - NOME" class="w-full border border-gray-300 rounded p-1.5 text-sm bg-white">
-                </div>
-                <div class="w-full md:w-1/4">
-                    <label class="text-xs text-gray-500 block mb-1">Setor</label>
-                    <input type="text" id="newSheetSector" placeholder="Ex: NOVO SETOR" class="w-full border border-gray-300 rounded p-1.5 text-sm bg-white">
-                </div>
-                <button onclick="addNewSheet()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-4 rounded text-sm h-8 flex items-center transition-colors">
-                    + Adicionar
-                </button>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <div id="sheets-container" class="flex flex-col items-center gap-8 pb-10">
-        <!-- Rendered sheets will go here -->
+    <!-- Edit Modal Overlay -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                    Editar Planilha
+                </h2>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Dynamic Form) -->
+            <div class="p-6 overflow-y-auto flex-1">
+                <input type="hidden" id="editSheetId">
+                <div id="editFormContent"></div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
+                <button onclick="closeEditModal()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded shadow-sm transition-colors text-sm">
+                    Cancelar
+                </button>
+                <button onclick="saveSheetEdit()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow-sm transition-colors text-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -181,22 +301,13 @@
             },
             {
                 id: 'sheet_2',
-                type: 'pragas31',
+                type: 'pragas31', // Agora este tipo gera FRENTE e VERSO automaticamente
                 popTitle: 'POP 4 - CONTROLE INTEGRADO DE VETORES E PRAGAS URBANAS<br>ACOMPANHAMENTO DE VETORES E PRAGAS.',
                 popNumber: 'POP 4',
                 anexoInfo: 'ANEXO 1<br>2026',
                 sector: 'PÃO DE QUEIJO',
                 items: ['Baratas', 'Escorpião', 'Ratos', 'Moscas', 'Formigas', 'Aranhas', 'Traças', 'Carunchos', 'Pássaros', 'Besouros'],
                 dateFormat: 'mes_barra_ano' // AGOSTO/2026
-            },
-            {
-                id: 'sheet_3',
-                type: 'listaVazia',
-                popTitle: 'POP 4 - CONTROLE INTEGRADO DE VETORES E PRAGAS URBANAS<br>ACOMPANHAMENTO DE VETORES E PRAGAS.',
-                popNumber: 'POP 4',
-                anexoInfo: 'ANEXO 1<br>2026',
-                columns: ['DATA', 'PRAGA', 'LOCAL', 'ASSINATURA'],
-                rowsCount: 20
             },
             {
                 id: 'sheet_4',
@@ -370,9 +481,9 @@
             return html;
         }
 
-        function generateDaysHeaders() {
+        function generateDaysHeaders(daysInMonth) {
             let ths = '';
-            for(let i=1; i<=31; i++) {
+            for(let i=1; i<=daysInMonth; i++) {
                 ths += `<th class="w-4">${i}</th>`;
             }
             return ths;
@@ -397,7 +508,7 @@
             `;
         }
 
-        function renderCronograma31(sheet) {
+        function renderCronograma31(sheet, daysInMonth) {
             let html = generateHeaderHTML(sheet);
             html += `
             <table class="w-full text-xs">
@@ -405,9 +516,9 @@
                     <tr>
                         <th rowspan="2" class="w-32 px-1 text-left">EQUIPAMENTOS</th>
                         <th rowspan="2" class="w-20">FREQUÊNCIA</th>
-                        <th colspan="31" class="text-center bg-gray-200">CRONOGRAMA DE HIGIENIZAÇÃO</th>
+                        <th colspan="${daysInMonth}" class="text-center bg-gray-200">CRONOGRAMA DE HIGIENIZAÇÃO</th>
                     </tr>
-                    <tr class="bg-gray-100">${generateDaysHeaders()}</tr>
+                    <tr class="bg-gray-100">${generateDaysHeaders(daysInMonth)}</tr>
                 </thead>
                 <tbody>`;
             
@@ -415,9 +526,15 @@
                 html += `<tr>
                     <td class="text-left font-semibold text-[10px] leading-tight">${item.name}</td>
                     <td class="text-[10px]">${item.freq}</td>
-                    ${generateEmptyCells(31)}
+                    ${generateEmptyCells(daysInMonth)}
                 </tr>`;
             });
+
+            // Adiciona linhas extras em branco se configurado
+            let extraRows = sheet.extraRows || 0;
+            for(let i=0; i<extraRows; i++) {
+                html += `<tr><td class="h-6"></td><td></td>${generateEmptyCells(daysInMonth)}</tr>`;
+            }
             
             html += `</tbody></table>`;
             
@@ -433,7 +550,7 @@
             return html;
         }
 
-        function renderPragas31(sheet) {
+        function renderPragas31(sheet, daysInMonth) {
             let html = generateHeaderHTML(sheet);
             html += `
             <div class="flex justify-center">
@@ -441,16 +558,22 @@
                     <thead>
                         <tr>
                             <th rowspan="2" class="w-24">PRAGAS</th>
-                            <th colspan="31" class="text-center bg-gray-200">DIAS DO MÊS</th>
+                            <th colspan="${daysInMonth}" class="text-center bg-gray-200">DIAS DO MÊS</th>
                         </tr>
-                        <tr class="bg-gray-100">${generateDaysHeaders()}</tr>
+                        <tr class="bg-gray-100">${generateDaysHeaders(daysInMonth)}</tr>
                     </thead>
                     <tbody>`;
             
             sheet.items.forEach(praga => {
-                html += `<tr><td class="font-semibold h-7">${praga}</td>${generateEmptyCells(31)}</tr>`;
+                html += `<tr><td class="font-semibold h-7">${praga}</td>${generateEmptyCells(daysInMonth)}</tr>`;
             });
             
+            // Adiciona linhas extras em branco se configurado
+            let extraRows = sheet.extraRows || 0;
+            for(let i=0; i<extraRows; i++) {
+                html += `<tr><td class="h-7"></td>${generateEmptyCells(daysInMonth)}</tr>`;
+            }
+
             html += `</tbody></table></div>`;
             return html;
         }
@@ -467,7 +590,8 @@
             html += `</tr></thead><tbody>`;
             
             for(let i=0; i<sheet.rowsCount; i++) {
-                html += `<tr class="h-10">`;
+                // h-8 em vez de h-10 para garantir que a lista caiba em 1 página perfeitamente
+                html += `<tr class="h-8">`;
                 sheet.columns.forEach(() => html += `<td></td>`);
                 html += `</tr>`;
             }
@@ -500,6 +624,8 @@
                 <div>PERÍODO: <span class="dynamic-date text-black uppercase" data-format="${sheet.dateFormat}"></span></div>
             </div>`;
 
+            let rowCount = sheet.rowsCount || 25;
+
             html += `<div class="flex gap-4">`;
             
             // Table 1
@@ -512,7 +638,7 @@
                         </tr>
                     </thead>
                     <tbody>`;
-            for(let i=0; i<25; i++) html += `<tr class="h-6"><td></td><td></td><td></td><td></td></tr>`;
+            for(let i=0; i<rowCount; i++) html += `<tr class="h-6"><td></td><td></td><td></td><td></td></tr>`;
             html += `</tbody></table></div>`;
 
             // Table 2
@@ -525,7 +651,7 @@
                         </tr>
                     </thead>
                     <tbody>`;
-            for(let i=0; i<25; i++) html += `<tr class="h-6"><td></td><td></td><td></td><td></td></tr>`;
+            for(let i=0; i<rowCount; i++) html += `<tr class="h-6"><td></td><td></td><td></td><td></td></tr>`;
             html += `</tbody></table></div>`;
 
             html += `</div>
@@ -537,43 +663,87 @@
             return html;
         }
 
-        
+        function createSheetDOM(id, contentHTML, includeActions = true, parentId = null) {
+            const sheetDiv = document.createElement('div');
+            sheetDiv.className = 'sheet-container bg-white p-8 shadow-lg relative page-break flex flex-col justify-between';
+            sheetDiv.id = id;
+
+            if (includeActions) {
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'action-btns no-print';
+
+                // Edit Button
+                const editBtn = document.createElement('button');
+                editBtn.className = 'bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded text-xs opacity-75 hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm font-semibold border border-blue-200';
+                editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg> Editar`;
+                editBtn.onclick = () => openEditModal(parentId || id);
+                
+                // Delete Button
+                const delBtn = document.createElement('button');
+                delBtn.className = 'bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded text-xs opacity-75 hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm font-semibold border border-red-200';
+                delBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg> Remover`;
+                delBtn.onclick = () => removeSheet(parentId || id);
+                
+                actionDiv.appendChild(editBtn);
+                actionDiv.appendChild(delBtn);
+                sheetDiv.appendChild(actionDiv);
+            }
+
+            const mainContentWrapper = document.createElement('div');
+            mainContentWrapper.className = 'w-full flex-1'; 
+            mainContentWrapper.innerHTML = contentHTML;
+            sheetDiv.appendChild(mainContentWrapper);
+
+            const footerWrapper = document.createElement('div');
+            footerWrapper.className = 'w-full mt-2';
+            footerWrapper.innerHTML = generateFooterHTML();
+            sheetDiv.appendChild(footerWrapper);
+
+            return sheetDiv;
+        }
+
         function renderAllSheets() {
             const container = document.getElementById('sheets-container');
             container.innerHTML = ''; // Clear current
 
-            sheetsConfig.forEach((sheet, index) => {
-                const sheetDiv = document.createElement('div');
-                /* Adicionado flex e justify-between para empurrar o rodapé para baixo */
-                sheetDiv.className = 'sheet-container bg-white p-8 shadow-lg relative page-break flex flex-col justify-between';
-                sheetDiv.id = sheet.id;
+            const monthName = document.getElementById('monthSelect').value;
+            const year = parseInt(document.getElementById('yearInput').value) || new Date().getFullYear();
+            
+            // Mapeia o nome do mês para um número (0 = Janeiro, 11 = Dezembro)
+            const monthMap = {
+                'JANEIRO': 0, 'FEVEREIRO': 1, 'MARÇO': 2, 'ABRIL': 3, 'MAIO': 4, 'JUNHO': 5,
+                'JULHO': 6, 'AGOSTO': 7, 'SETEMBRO': 8, 'OUTUBRO': 9, 'NOVEMBRO': 10, 'DEZEMBRO': 11
+            };
+            const monthNum = monthMap[monthName] || 0;
+            
+            // Calcula quantos dias o mês e o ano selecionados possuem (trata anos bissextos automaticamente)
+            const daysInMonth = new Date(year, monthNum + 1, 0).getDate();
 
-                // Add delete button
-                const delBtn = document.createElement('button');
-                delBtn.className = 'delete-btn no-print bg-red-100 text-red-600 hover:bg-red-200 p-1 rounded text-xs opacity-50 hover:opacity-100 transition-opacity';
-                delBtn.innerHTML = 'Remover';
-                delBtn.onclick = () => removeSheet(sheet.id);
-                sheetDiv.appendChild(delBtn);
-
-                let contentHTML = '';
-                switch(sheet.type) {
-                    case 'cronograma31': contentHTML = renderCronograma31(sheet); break;
-                    case 'pragas31': contentHTML = renderPragas31(sheet); break;
-                    case 'listaVazia': contentHTML = renderListaVazia(sheet); break;
-                    case 'temperatura2': contentHTML = renderTemperatura2(sheet); break;
+            sheetsConfig.forEach((sheet) => {
+                if (sheet.type === 'pragas31') {
+                    // --- GERA FRENTE (Cronograma) ---
+                    const frontHTML = renderPragas31(sheet, daysInMonth);
+                    container.appendChild(createSheetDOM(sheet.id + '_front', frontHTML, true, sheet.id));
+                    
+                    // --- GERA VERSO (Lista de Ocorrências Vazia) ---
+                    const backSheetConfig = {
+                        ...sheet,
+                        columns: ['DATA', 'PRAGA', 'LOCAL', 'ASSINATURA'],
+                        rowsCount: sheet.backRowsCount || 15 // Usa a quantidade dinâmica
+                    };
+                    const backHTML = renderListaVazia(backSheetConfig);
+                    // O botão de deletar não vai no verso (false), se deletar a frente, deleta a folha inteira
+                    container.appendChild(createSheetDOM(sheet.id + '_back', backHTML, false, sheet.id));
+                } else {
+                    // Outras planilhas normais (1 página)
+                    let contentHTML = '';
+                    switch(sheet.type) {
+                        case 'cronograma31': contentHTML = renderCronograma31(sheet, daysInMonth); break;
+                        case 'listaVazia': contentHTML = renderListaVazia(sheet); break;
+                        case 'temperatura2': contentHTML = renderTemperatura2(sheet); break;
+                    }
+                    container.appendChild(createSheetDOM(sheet.id, contentHTML, true, sheet.id));
                 }
-
-                const mainContentWrapper = document.createElement('div');
-                mainContentWrapper.className = 'w-full flex-1'; // flex-1 faz o conteúdo empurrar o rodapé para o fim da folha
-                mainContentWrapper.innerHTML = contentHTML;
-                sheetDiv.appendChild(mainContentWrapper);
-
-                const footerWrapper = document.createElement('div');
-                footerWrapper.className = 'w-full';
-                footerWrapper.innerHTML = generateFooterHTML();
-                sheetDiv.appendChild(footerWrapper);
-
-                container.appendChild(sheetDiv);
             });
             
             updateDates(); // Format dates after rendering
@@ -650,12 +820,138 @@
             });
         }
 
+        // --- EDIT MODAL FUNCTIONS ---
+
+        function openEditModal(id) {
+            const sheet = sheetsConfig.find(s => s.id === id);
+            if(!sheet) return;
+            
+            document.getElementById('editSheetId').value = sheet.id;
+            
+            let html = `
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Título do POP</label>
+                    <input type="text" id="editPopTitle" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${sheet.popTitle.replace(/<br>/g, ' - ')}">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Setor</label>
+                    <input type="text" id="editSector" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${sheet.sector}">
+                </div>
+            `;
+            
+            if(sheet.type === 'pragas31') {
+                let currentBackRows = sheet.backRowsCount || 15;
+                let extraRows = sheet.extraRows || 0;
+                html += `
+                <div class="flex gap-4 mb-4">
+                    <div class="w-1/2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Linhas Extras Vazias (Frente)</label>
+                        <input type="number" id="editExtraRows" min="0" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${extraRows}">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Quantidade de Linhas (Verso)</label>
+                        <input type="number" id="editBackRowsCount" min="1" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${currentBackRows}">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Lista de Pragas</label>
+                    <p class="text-xs text-gray-500 mb-2">Digite uma praga por linha.</p>
+                    <textarea id="editPragas" class="w-full border border-gray-300 rounded p-2 text-sm h-48 focus:ring-blue-500 focus:border-blue-500 outline-none whitespace-pre-wrap">${sheet.items.join('\n')}</textarea>
+                </div>`;
+            } else if(sheet.type === 'cronograma31') {
+                let extraRows = sheet.extraRows || 0;
+                html += `
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Linhas Extras Vazias (Final da tabela)</label>
+                    <input type="number" id="editExtraRows" min="0" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${extraRows}">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Equipamentos e Frequência</label>
+                    <p class="text-xs text-gray-500 mb-2">Separe o nome da frequência com a barra vertical ( <span class="font-bold text-black">|</span> ). Uma linha por equipamento. Ex: <span class="italic font-mono">MASSEIRA | DIÁRIA</span></p>
+                    <textarea id="editEquipamentos" class="w-full border border-gray-300 rounded p-2 text-sm h-48 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-400 whitespace-pre-wrap">${sheet.items.map(i => i.name + ' | ' + i.freq).join('\n')}</textarea>
+                </div>`;
+            } else if(sheet.type === 'temperatura2') {
+                 let currentRows = sheet.rowsCount || 25;
+                 html += `
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Quantidade de Linhas (Tabela)</label>
+                    <input type="number" id="editRowsCount" min="1" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${currentRows}">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nome do Equipamento 1 (Esquerda)</label>
+                    <input type="text" id="editEq1" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${sheet.eq1}">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nome do Equipamento 2 (Direita)</label>
+                    <input type="text" id="editEq2" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${sheet.eq2}">
+                </div>`;
+            } else if (sheet.type === 'listaVazia') {
+                 let currentRows = sheet.rowsCount || 20;
+                 html += `
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Quantidade de Linhas (Tabela)</label>
+                    <input type="number" id="editRowsCount" min="1" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" value="${currentRows}">
+                </div>`;
+            }
+            
+            document.getElementById('editFormContent').innerHTML = html;
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function saveSheetEdit() {
+            const id = document.getElementById('editSheetId').value;
+            const sheet = sheetsConfig.find(s => s.id === id);
+            if(!sheet) return;
+
+            // Update Basic Info
+            sheet.popTitle = document.getElementById('editPopTitle').value;
+            sheet.sector = document.getElementById('editSector').value;
+            sheet.popNumber = sheet.popTitle.split(' -')[0].trim() || 'POP X';
+
+            // Update Specific Fields
+            if(sheet.type === 'pragas31') {
+                sheet.backRowsCount = parseInt(document.getElementById('editBackRowsCount').value) || 15;
+                sheet.extraRows = parseInt(document.getElementById('editExtraRows').value) || 0;
+                sheet.items = document.getElementById('editPragas').value
+                                    .split('\n')
+                                    .map(i => i.trim())
+                                    .filter(i => i !== '');
+            } else if(sheet.type === 'cronograma31') {
+                sheet.extraRows = parseInt(document.getElementById('editExtraRows').value) || 0;
+                sheet.items = document.getElementById('editEquipamentos').value
+                                    .split('\n')
+                                    .map(line => {
+                                        const parts = line.split('|').map(p => p.trim());
+                                        if (parts[0]) {
+                                            return { name: parts[0], freq: parts[1] || 'DIÁRIA' };
+                                        }
+                                        return null;
+                                    })
+                                    .filter(i => i !== null);
+            } else if(sheet.type === 'temperatura2') {
+                sheet.rowsCount = parseInt(document.getElementById('editRowsCount').value) || 25;
+                sheet.eq1 = document.getElementById('editEq1').value;
+                sheet.eq2 = document.getElementById('editEq2').value;
+            } else if (sheet.type === 'listaVazia') {
+                sheet.rowsCount = parseInt(document.getElementById('editRowsCount').value) || 20;
+            }
+
+            closeEditModal();
+            renderAllSheets();
+        }
+
         // Initialization
         document.addEventListener('DOMContentLoaded', () => {
             renderAllSheets();
             
-            document.getElementById('monthSelect').addEventListener('change', updateDates);
-            document.getElementById('yearInput').addEventListener('input', updateDates);
+            // Agora, ao mudar a data, reconstruímos todas as planilhas para atualizar as colunas de dias!
+            document.getElementById('monthSelect').addEventListener('change', renderAllSheets);
+            document.getElementById('yearInput').addEventListener('change', renderAllSheets);
+            document.getElementById('yearInput').addEventListener('input', renderAllSheets);
         });
 
         

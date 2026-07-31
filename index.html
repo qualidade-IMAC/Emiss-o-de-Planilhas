@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Emissão de Planilhas IMAC - Dinâmico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+            body {
+                background-color: white;
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            .sheet-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+                border: none !important;
+                transform: none !important;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 2px;
+        }
+        .rotated-text {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+        }
+        .header-table th, .header-table td {
+            border: 1px solid black;
+            padding: 4px;
+            font-size: 0.8rem;
+        }
+        
+        @media screen {
+            .sheet-container {
+                width: 297mm;
+                min-height: 210mm;
+                position: relative;
+            }
+            .delete-btn {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 20;
+            }
+        }
+        /* Hidden on print */
+        @media print {
+            .delete-btn { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+    <div class="no-print bg-white p-6 shadow-md mb-8 sticky top-0 z-50 border-b-4 border-blue-500">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Gerador Dinâmico de Planilhas</h1>
+                <p class="text-sm text-gray-500">Configure as datas e adicione novas planilhas personalizadas.</p>
+            </div>
+            
+            <div class="flex flex-wrap items-end gap-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div class="flex flex-col mr-2">
+                    <label for="monthSelect" class="text-xs font-semibold text-gray-600 mb-1">Mês Global</label>
+                    <select id="monthSelect" class="border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 bg-white">
+                        <option value="JANEIRO">Janeiro</option>
+                        <option value="FEVEREIRO">Fevereiro</option>
+                        <option value="MARÇO">Março</option>
+                        <option value="ABRIL">Abril</option>
+                        <option value="MAIO">Maio</option>
+                <div class="flex flex-col mr-2">
+                    <label for="yearInput" class="text-xs font-semibold text-gray-600 mb-1">Ano Global</label>
+                    <input type="number" id="yearInput" value="2026" class="border border-gray-300 rounded p-2 text-sm w-24 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                </div>
+                
+                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 h-10 text-sm" title="Exportar para Excel">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Excel
+                </button>
+
+                <button onclick="exportToWord()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-3 rounded shadow transition duration-200 flex items-center gap-1 h-10 text-sm" title="Exportar para Word">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Word
+                </button>
+
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition duration-200 flex items-center gap-1 h-10 text-sm ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    Imprimir / PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Add New Sheet Panel -->
+        <div class="mt-4 pt-4 border-t border-gray-200">
+            <h3 class="text-sm font-bold text-gray-700 mb-2">Adicionar Nova Planilha:</h3>
+            <div class="flex flex-wrap items-end gap-3">
+                <div class="w-full md:w-1/4">
+                    <label class="text-xs text-gray-500 block mb-1">Tipo de Template</label>
+                    <select id="newSheetType" class="w-full border border-gray-300 rounded p-1.5 text-sm bg-white">
+                        <option value="cronograma31">Cronograma 31 Dias (ex: Equipamentos)</option>
+                        <option value="pragas31">Pragas 31 Dias (ex: Setor)</option>
+                        <option value="temperatura2">Temperatura (2 equipamentos)</option>
+                        <option value="listaVazia">Lista Vazia (Assinaturas/Ocorrências)</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="text-xs text-gray-500 block mb-1">Título do POP</label>
+                    <input type="text" id="newSheetPopTitle" placeholder="Ex: POP X - NOME" class="w-full border border-gray-300 rounded p-1.5 text-sm bg-white">
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="text-xs text-gray-500 block mb-1">Setor</label>
+                    <input type="text" id="newSheetSector" placeholder="Ex: NOVO SETOR" class="w-full border border-gray-300 rounded p-1.5 text-sm bg-white">
+                </div>
+                <button onclick="addNewSheet()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-4 rounded text-sm h-8 flex items-center transition-colors">
+                    + Adicionar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sheets-container" class="flex flex-col items-center gap-8 pb-10">
+        <!-- Rendered sheets will go here -->
+    </div>
+
+    <script>
+        // Define the initial state based on the provided images
+        let sheetsConfig = [
+            {
+                id: 'sheet_1',
+                type: 'cronograma31',
+                popTitle: 'POP 1 - HIGIENIZAÇÃO DE EQUIPAMENTOS E UTENSILIOS',
+                popNumber: 'POP 1',
+                anexoInfo: 'ANEXO 1<br>2026',
+                sector: 'PÃO DE QUEIJO',
+                items: [
+                    { name: 'MASSEIRA', freq: 'DIÁRIA' },
+                    { name: 'EXTRUSORA', freq: 'DIÁRIA' },
+                    { name: 'BALANÇA', freq: 'DIÁRIA' },
+                    { name: 'FREEZER 1', freq: 'SEMANAL' },
+                    { name: 'FREEZER 2', freq: 'SEMANAL' },
+                    { name: 'GELADEIRA', freq: 'SEMANAL' },
+                    { name: 'TELAS', freq: 'SEMANAL' },
+                    { name: 'PISO', freq: 'DIÁRIO' },
+                    { name: 'VIDROS', freq: 'SEMANAL' },
+                    { name: 'PAREDES', freq: 'SEMANAL' },
+                    { name: 'LUMINÁRIAS', freq: 'MENSAL' },
+                    { name: 'TETO', freq: 'QUINZENAL' },
+                    { name: 'RALO', freq: 'QUINZENAL' },
+                    { name: 'FILTRO AR CONDICIONADO', freq: 'SEMANAL' }
+                ],
+                dateFormat: 'mes_ano_espaco' // AGOSTO 2026
+            },
+            {
+                id: 'sheet_2',
+                type: 'pragas31',
+                popTitle: 'POP 4 - CONTROLE INTEGRADO DE VETORES E PRAGAS URBANAS<br>ACOMPANHAMENTO DE VETORES E PRAGAS.',
+                popNumber: 'POP 4',
+                anexoInfo: 'ANEXO 1<br>2026',
+                sector: 'PÃO DE QUEIJO',
+                items: ['Baratas', 'Escorpião', 'Ratos', 'Moscas', 'Formigas', 'Aranhas', 'Traças', 'Carunchos', 'Pássaros', 'Besouros'],
+                dateFormat: 'mes_barra_ano' // AGOSTO/2026
+            },
+            {
+                id: 'sheet_3',
+                type: 'listaVazia',
+                popTitle: 'POP 4 - CONTROLE INTEGRADO DE VETORES E PRAGAS URBANAS<br>ACOMPANHAMENTO DE VETORES E PRAGAS.',
+                popNumber: 'POP 4',
+                anexoInfo: 'ANEXO 1<br>2026',
+                columns: ['DATA', 'PRAGA', 'LOCAL', 'ASSINATURA'],
+                rowsCount: 20
+            },
+            {
+                id: 'sheet_4',
+                type: 'cronograma31',
+                popTitle: 'POP 1 - HIGIENIZAÇÃO DE EQUIPAMENTOS E ULTENSILIOS',
+                popNumber: 'POP 1',
+                anexoInfo: 'DATA: ________',
+                sector: 'PRÉ-ASSADOS',
+                items: [
+                    { name: 'BALANÇAS', freq: 'DIÁRIA' },
+                    { name: 'MESAS', freq: 'DIÁRIA' },
+                    { name: 'MESAS (em baixo da mesa)', freq: 'SEMANAL' },
+                    { name: 'MASSEIRA', freq: 'QUANDO USAR' },
+                    { name: 'FORNO LASTRO', freq: 'SEMANAL' },
+                    { name: 'FORNO ROTATIVO', freq: 'SEMANAL' },
+                    { name: 'CAIXAS PLÁSTICAS', freq: 'DIÁRIO' },
+                    { name: 'PIAS', freq: 'SEMANAL' },
+                    { name: 'ESTRADOS', freq: 'SEMANAL' },
+                    { name: 'PISO', freq: 'QUINZENAL' },
+                    { name: 'PAREDE', freq: 'MENSAL' },
+                    { name: 'TETO', freq: 'SEMANAL' },
+                    { name: 'FERMENTADORA', freq: 'SEMANAL' },
+                    { name: 'TOMADAS', freq: 'SEMANAL' },
+                    { name: 'TUBULAÇÕES', freq: 'SEMANAL' },
+                    { name: 'CARTAZES', freq: 'SEMANAL' },
+                    { name: 'GELADEIRA', freq: 'SEMANAL' },
+                    { name: 'COUCHE', freq: 'DIÁRIO' },
+                    { name: 'BANETTON', freq: 'DIÁRIO' }
+                ],
+                dateFormat: 'mes_ano_espaco' // AGOSTO 2026
+            },
+            {
+                id: 'sheet_5',
+                type: 'temperatura2',
+                popTitle: 'POP 9 - CONTROLE DE TEMPERATURA<br>ACOMPANHAMENTO DA TEMPERATURA',
+                popNumber: 'POP 9',
+                anexoInfo: 'ANEXO 1<br>2025',
+                sector: 'PRE-ASSADO',
+                tempInfo: [
+                    { label: 'Temperatura Resfriado', range: '0°C a 10°C' },
+                    { label: 'Temperatura Ambiente', range: '10 á 16°C' }
+                ],
+                eq1: 'Área dos Fornos - Manhã',
+                eq2: 'Área dos Fornos - Tarde',
+                dateFormat: 'mes_capitalize_barra_ano' // Agosto /2026
+            },
+            {
+                id: 'sheet_6',
+                type: 'temperatura2',
+                popTitle: 'POP 9 - CONTROLE DE TEMPERATURA<br>ACOMPANHAMENTO DA TEMPERATURA',
+                popNumber: 'POP 9',
+                anexoInfo: 'ANEXO 1<br>2025',
+                sector: 'Pré - Assados',
+                tempInfo: [
+                    { label: 'Temperatura Resfriado', range: '0°C a 10°C' },
+                    { label: 'Temperatura Congelado', range: '- 22°C a 0°C' }
+                ],
+                eq1: 'Freezer- Manhã',
+                eq2: 'Freezer - Tarde',
+                dateFormat: 'mes_capitalize_barra_ano',
+                sidebarText: 'POP 4' // That weird sideways text on one image
+            },
+            {
+                id: 'sheet_7',
+                type: 'pragas31',
+                popTitle: 'POP 4 - CONTROLE INTEGRADO DE VETORES E PRAGAS URBANAS<br>ACOMPANHAMENTO DE VETORES E PRAGAS.',
+                popNumber: 'POP 4',
+                anexoInfo: 'ANEXO 1<br>2026',
+                sector: 'Pré- Assados',
+                items: ['Baratas', 'Escorpião', 'Ratos', 'Moscas', 'Formigas', 'Aranhas', 'Traças', 'Carunchos', 'Pássaros', 'Besouros', 'Mosquito', 'Abelhas', 'Tesourinha', 'Visto'],
+                dateFormat: 'mes_barra_ano'
+            },
+             {
+                id: 'sheet_8',
+                type: 'cronograma31',
+                popTitle: 'POP 1 - HIGIENIZAÇÃO DE EQUIPAMENTOS E ULTENSILIOS',
+                popNumber: 'POP 1',
+                anexoInfo: 'ANEXO 1<br>2026',
+                sector: 'PRÉ PESAGEM',
+                items: [
+                    { name: 'BALANÇA 1', freq: 'DIÁRIO' }, { name: 'BALANÇA 2', freq: 'DIÁRIO' },
+                    { name: 'BALANÇA 3', freq: 'DIÁRIO' }, { name: 'BALANÇA 4', freq: 'DIÁRIO' },
+                    { name: 'MESA (PARTE SUPERIOR) 1', freq: 'DIÁRIO' }, { name: 'MESA (PARTE SUPERIOR) 2', freq: 'DIÁRIO' },
+                    { name: 'FREEZER', freq: 'SEMANAL' }, { name: 'PALETES', freq: 'SEMANAL' },
+                    { name: 'PRATELEIRAS', freq: 'SEMANAL' }, { name: 'MESAS (PARTE INFERIOR)', freq: 'SEMANAL' },
+                    { name: 'PISO', freq: 'DIÁRIO' }, { name: 'VIDROS', freq: 'SEMANAL' },
+                    { name: 'PAREDES', freq: 'SEMANAL' }, { name: 'LUMINÁRIAS', freq: 'MENSAL' },
+                    { name: 'TETO', freq: 'QUINZENAL' }, { name: 'RALO', freq: 'QUINZENAL' },
+                    { name: 'FILTRO AR CONDICIONADO', freq: 'SEMANAL' }
+                ],
+                dateFormat: 'mes_barra_espaco_ano', // AGOSTO/ 2026
+                extraFooter: '+B4+A2:AH24+B4+A2:AH24+A1:AH24+A2:AH24'
+            },
+            {
+                id: 'sheet_9',
+                type: 'temperatura2',
+                popTitle: 'POP 9 - CONTROLE DE TEMPERATURA<br>ACOMPANHAMENTO DA TEMPERATURA',
+                popNumber: 'POP 9',
+                anexoInfo: 'ANEXO 1<br>2026',
+                sector: 'Pré Pesagem/ Estoque',
+                tempInfo: [
+                    { label: 'Freezer Congelado', range: '- 22°C a 0°C' },
+                    { label: 'Freezer Resfriado', range: '0°C a 10°C' }
+                ],
+                eq1: 'Freezer armazenamento de receitas 1 - Manhã',
+                eq2: 'Freezer armazenamento de receitas 1- Tarde',
+                dateFormat: 'mes_junto_ano', // AGOSTO2026
+                cornerText: 'POP 9'
+            },
+            {
+                id: 'sheet_10',
+                type: 'temperatura2',
+                popTitle: 'POP 9 - CONTROLE DE TEMPERATURA<br>ACOMPANHAMENTO DA TEMPERATURA',
+                popNumber: 'POP 9',
+                anexoInfo: 'ANEXO 1<br>2026',
+                sector: 'Pré Pesagem/ Estoque',
+                tempInfo: [
+                    { label: 'Freezer Congelado', range: '- 22°C a 0°C' },
+                    { label: 'Freezer Resfriado', range: '0°C a 10°C' }
+                ],
+                eq1: 'Freezer armazenamento de receitas 3 - Manhã',
+                eq2: 'Freezer armazenamento de receitas 3- Tarde',
+                dateFormat: 'mes_barra_ano' // AGOSTO/2026
+            }
+        ];
+
+        
+        function generateHeaderHTML(sheet) {
+            // Limpa quebras de linha para o novo formato de cabeçalho
+            const cleanTitle = sheet.popTitle.replace(/<br>/g, ' - ');
+            const cleanAnexo = sheet.anexoInfo.replace(/<br>/g, ' - ');
+
+            // Pega a data atual no formato DD/MM/YYYY
+            const today = new Date();
+            const currentDate = String(today.getDate()).padStart(2, '0') + '/' + 
+                                String(today.getMonth() + 1).padStart(2, '0') + '/' + 
+                                today.getFullYear();
+
+            let html = `
+            <div class="mb-4 ${sheet.cornerText || sheet.sidebarText ? 'mt-4' : ''}">
+                <!-- Top Brown Bar -->
+                <div class="w-full h-1.5 bg-[#7A4B2D] mb-4"></div>
+
+                <!-- Header Content -->
+                <div class="flex justify-between items-start mb-4">
+                    <!-- Left: Logo & Quality Control -->
+                    <div class="flex flex-col items-start gap-1">
+                        <img src="logo.png" alt="IMAC Logo" class="h-11 object-contain">
+                        <span class="font-bold text-[11px] uppercase tracking-wider text-black">Controle de Qualidade</span>
+                    </div>
+
+                    <!-- Right: Title & Emissao/Anexo -->
+                    <div class="flex flex-col items-end text-right">
+                        <h2 class="font-bold text-sm uppercase text-black max-w-lg leading-tight mb-1">${cleanTitle}</h2>
+                        <div class="text-xs text-gray-600 flex flex-col items-end gap-0.5">
+                            <span>${sheet.popNumber} | ${cleanAnexo}</span>
+                            <span>Versão: 00 | Emissão: ${currentDate}</span>
+                        </div>
+                    </div>
+                </div>`;
+                
+            if (sheet.type !== 'temperatura2' && sheet.type !== 'listaVazia') {
+                html += `
+                <!-- Info Bar (Setor / Data) -->
+                <div class="bg-[#f0f0f0] border-l-4 border-[#7A4B2D] px-3 py-1.5 flex justify-between items-center text-xs font-bold text-[#7A4B2D] mb-4">
+                    <div>SETOR: <span class="text-black uppercase">${sheet.sector}</span></div>
+                    <div>MÊS/ANO: <span class="dynamic-date text-black uppercase" data-format="${sheet.dateFormat}"></span></div>
+                </div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function generateDaysHeaders() {
+            let ths = '';
+            for(let i=1; i<=31; i++) {
+                ths += `<th class="w-4">${i}</th>`;
+            }
+            return ths;
+        }
+
+        function generateEmptyCells(count) {
+            let tds = '';
+            for(let i=0; i<count; i++) tds += '<td></td>';
+            return tds;
+        }
+
+        function generateFooterHTML() {
+            return `
+            <div class="mt-8 pt-3 border-t-2 border-[#7A4B2D] text-[10px] text-gray-800 w-full" style="page-break-inside: avoid;">
+                <div class="font-bold uppercase mb-2 text-black">Classificação de informação: Uso interno</div>
+                <div class="flex justify-between items-start gap-4">
+                    <div class="flex-1 leading-relaxed"><span class="font-bold text-black">Elaborado por:</span><br>Cristiamberg Coimbra - Equipe do Controle da Qualidade</div>
+                    <div class="flex-1 leading-relaxed border-l border-gray-300 pl-4"><span class="font-bold text-black">Revisado por:</span><br>Nathália Viana - Coordenadora de Qualidade</div>
+                    <div class="flex-1 leading-relaxed border-l border-gray-300 pl-4"><span class="font-bold text-black">Aprovado por:</span><br>Thalita Lelis - Gerente industrial</div>
+                </div>
+            </div>
+            `;
+        }
+
+        function renderCronograma31(sheet) {
+            let html = generateHeaderHTML(sheet);
+            html += `
+            <table class="w-full text-xs">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="w-32 px-1 text-left">EQUIPAMENTOS</th>
+                        <th rowspan="2" class="w-20">FREQUÊNCIA</th>
+                        <th colspan="31" class="text-center bg-gray-200">CRONOGRAMA DE HIGIENIZAÇÃO</th>
+                    </tr>
+                    <tr class="bg-gray-100">${generateDaysHeaders()}</tr>
+                </thead>
+                <tbody>`;
+            
+            sheet.items.forEach(item => {
+                html += `<tr>
+                    <td class="text-left font-semibold text-[10px] leading-tight">${item.name}</td>
+                    <td class="text-[10px]">${item.freq}</td>
+                    ${generateEmptyCells(31)}
+                </tr>`;
+            });
+            
+            html += `</tbody></table>`;
+            
+            if(sheet.extraFooter) {
+                html += `<div class="mt-4 text-[10px] text-right font-mono text-gray-400">${sheet.extraFooter}</div>`;
+            }
+            
+            html += `
+            <div class="mt-8 text-sm">
+                <p>Assinatura de conferencia da planilha: ___________________________________________________________</p>
+                <p class="mt-4">Data de Conferencia da planilha: ___________________________________________________________</p>
+            </div>`;
+            return html;
+        }
+
+        function renderPragas31(sheet) {
+            let html = generateHeaderHTML(sheet);
+            html += `
+            <div class="flex justify-center">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="w-24">PRAGAS</th>
+                            <th colspan="31" class="text-center bg-gray-200">DIAS DO MÊS</th>
+                        </tr>
+                        <tr class="bg-gray-100">${generateDaysHeaders()}</tr>
+                    </thead>
+                    <tbody>`;
+            
+            sheet.items.forEach(praga => {
+                html += `<tr><td class="font-semibold h-7">${praga}</td>${generateEmptyCells(31)}</tr>`;
+            });
+            
+            html += `</tbody></table></div>`;
+            return html;
+        }
+
+        function renderListaVazia(sheet) {
+            let html = generateHeaderHTML(sheet);
+            html += `
+            <table class="w-full text-sm mt-4">
+                <thead>
+                    <tr class="bg-gray-200">`;
+            sheet.columns.forEach(col => {
+                 html += `<th class="py-2 ${col==='ASSINATURA' ? 'w-48' : (col==='DATA' ? 'w-24' : '')}">${col}</th>`;
+            });
+            html += `</tr></thead><tbody>`;
+            
+            for(let i=0; i<sheet.rowsCount; i++) {
+                html += `<tr class="h-10">`;
+                sheet.columns.forEach(() => html += `<td></td>`);
+                html += `</tr>`;
+            }
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        function renderTemperatura2(sheet) {
+            let html = '';
+            if(sheet.sidebarText) {
+                html += `<div class="absolute top-[150px] -left-[50px] -rotate-90 text-xs font-bold tracking-widest text-gray-500">${sheet.sidebarText}</div>`;
+            }
+            if(sheet.cornerText) {
+                 html += `<div class="absolute top-8 right-8 text-xs font-bold text-gray-500">${sheet.cornerText}</div>`;
+            }
+
+            html += generateHeaderHTML(sheet);
+            
+            html += `<div class="text-center font-bold text-xs mb-1 mt-2">TEMPERATURA RECOMENDADA:</div>
+            <table class="w-full text-xs mb-4">`;
+            
+            sheet.tempInfo.forEach(info => {
+                 html += `<tr><td class="w-1/2 text-center border px-2 py-1 bg-gray-50">${info.label}</td><td class="text-center border py-1 bg-gray-50">${info.range}</td></tr>`;
+            });
+            html += `</table>`;
+
+            html += `
+            <div class="bg-[#f0f0f0] border-l-4 border-[#7A4B2D] px-3 py-1.5 flex justify-between items-center text-xs font-bold text-[#7A4B2D] mb-3">
+                <div>SETOR: <span class="text-black uppercase">${sheet.sector}</span></div>
+                <div>PERÍODO: <span class="dynamic-date text-black uppercase" data-format="${sheet.dateFormat}"></span></div>
+            </div>`;
+
+            html += `<div class="flex gap-4">`;
+            
+            // Table 1
+            html += `<div class="w-1/2">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr><th colspan="4" class="text-left bg-gray-100 px-2 py-1 font-semibold border-0 border-b">Equipamento: ${sheet.eq1}</th></tr>
+                        <tr class="bg-gray-50">
+                            <th class="py-1 w-1/4">DATA</th><th class="py-1 w-1/4">HORA</th><th class="py-1 w-1/4">T°C</th><th class="py-1 w-1/4">VISTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            for(let i=0; i<25; i++) html += `<tr class="h-6"><td></td><td></td><td></td><td></td></tr>`;
+            html += `</tbody></table></div>`;
+
+            // Table 2
+            html += `<div class="w-1/2">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr><th colspan="4" class="text-left bg-gray-100 px-2 py-1 font-semibold border-0 border-b">Equipamento: ${sheet.eq2}</th></tr>
+                        <tr class="bg-gray-50">
+                            <th class="py-1 w-1/4">DATA</th><th class="py-1 w-1/4">HORA</th><th class="py-1 w-1/4">T°C</th><th class="py-1 w-1/4">VISTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            for(let i=0; i<25; i++) html += `<tr class="h-6"><td></td><td></td><td></td><td></td></tr>`;
+            html += `</tbody></table></div>`;
+
+            html += `</div>
+            <div class="mt-6 text-sm font-semibold">
+                <p class="mb-2">Assinatura de conferencia da planilha: _________________________________________</p>
+                <p>Data de conferencia da planilha: _______________________________________________</p>
+            </div>`;
+            
+            return html;
+        }
+
+        
+        function renderAllSheets() {
+            const container = document.getElementById('sheets-container');
+            container.innerHTML = ''; // Clear current
+
+            sheetsConfig.forEach((sheet, index) => {
+                const sheetDiv = document.createElement('div');
+                /* Adicionado flex e justify-between para empurrar o rodapé para baixo */
+                sheetDiv.className = 'sheet-container bg-white p-8 shadow-lg relative page-break flex flex-col justify-between';
+                sheetDiv.id = sheet.id;
+
+                // Add delete button
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn no-print bg-red-100 text-red-600 hover:bg-red-200 p-1 rounded text-xs opacity-50 hover:opacity-100 transition-opacity';
+                delBtn.innerHTML = 'Remover';
+                delBtn.onclick = () => removeSheet(sheet.id);
+                sheetDiv.appendChild(delBtn);
+
+                let contentHTML = '';
+                switch(sheet.type) {
+                    case 'cronograma31': contentHTML = renderCronograma31(sheet); break;
+                    case 'pragas31': contentHTML = renderPragas31(sheet); break;
+                    case 'listaVazia': contentHTML = renderListaVazia(sheet); break;
+                    case 'temperatura2': contentHTML = renderTemperatura2(sheet); break;
+                }
+
+                const mainContentWrapper = document.createElement('div');
+                mainContentWrapper.className = 'w-full flex-1'; // flex-1 faz o conteúdo empurrar o rodapé para o fim da folha
+                mainContentWrapper.innerHTML = contentHTML;
+                sheetDiv.appendChild(mainContentWrapper);
+
+                const footerWrapper = document.createElement('div');
+                footerWrapper.className = 'w-full';
+                footerWrapper.innerHTML = generateFooterHTML();
+                sheetDiv.appendChild(footerWrapper);
+
+                container.appendChild(sheetDiv);
+            });
+            
+            updateDates(); // Format dates after rendering
+        }
+
+        function removeSheet(id) {
+            sheetsConfig = sheetsConfig.filter(s => s.id !== id);
+            renderAllSheets();
+        }
+
+        function addNewSheet() {
+            const type = document.getElementById('newSheetType').value;
+            const popTitle = document.getElementById('newSheetPopTitle').value || 'POP X - TÍTULO DO POP';
+            const sector = document.getElementById('newSheetSector').value || 'NOVO SETOR';
+            const newId = 'sheet_' + Date.now();
+
+            let newSheet = {
+                id: newId,
+                type: type,
+                popTitle: popTitle,
+                popNumber: popTitle.split(' -')[0] || 'POP X',
+                anexoInfo: 'ANEXO 1<br>'+document.getElementById('yearInput').value,
+                sector: sector,
+                dateFormat: 'mes_ano_espaco'
+            };
+
+            // Add default dummy data based on type
+            if(type === 'cronograma31') {
+                newSheet.items = [
+                    { name: 'ITEM 1', freq: 'DIÁRIA' },
+                    { name: 'ITEM 2', freq: 'SEMANAL' }
+                ];
+            } else if (type === 'pragas31') {
+                newSheet.items = ['Praga 1', 'Praga 2'];
+                newSheet.dateFormat = 'mes_barra_ano';
+            } else if (type === 'temperatura2') {
+                newSheet.tempInfo = [
+                    { label: 'Temp Ideal', range: '0°C a 10°C' }
+                ];
+                newSheet.eq1 = 'Equipamento A - Manhã';
+                newSheet.eq2 = 'Equipamento A - Tarde';
+            } else if (type === 'listaVazia') {
+                 newSheet.columns = ['DATA', 'DESCRIÇÃO', 'VISTO'];
+                 newSheet.rowsCount = 20;
+            }
+
+            sheetsConfig.push(newSheet);
+            renderAllSheets();
+            
+            // Reset form slightly
+            document.getElementById('newSheetSector').value = '';
+        }
+
+        function updateDates() {
+            const monthSelect = document.getElementById('monthSelect');
+            const yearInput = document.getElementById('yearInput');
+            
+            const month = monthSelect.value;
+            const year = yearInput.value;
+            const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1).toLowerCase();
+
+            const formats = {
+                'mes_ano_espaco': `${month} ${year}`,
+                'mes_barra_ano': `${month}/${year}`,
+                'mes_capitalize_barra_ano': `${monthCapitalized} /${year}`,
+                'mes_barra_espaco_ano': `${month}/ ${year}`,
+                'mes_junto_ano': `${month}${year}`
+            };
+
+            const dateEls = document.querySelectorAll('.dynamic-date');
+            dateEls.forEach(el => {
+                const formatRequired = el.getAttribute('data-format') || 'mes_ano_espaco';
+                el.textContent = formats[formatRequired] || formats['mes_ano_espaco'];
+            });
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAllSheets();
+            
+            document.getElementById('monthSelect').addEventListener('change', updateDates);
+            document.getElementById('yearInput').addEventListener('input', updateDates);
+        });
+
+        
+        function exportToExcel() {
+            // Cria um novo arquivo Excel em memória
+            const wb = XLSX.utils.book_new();
+            const sheetsContainers = document.querySelectorAll('.sheet-container');
+            
+            // Objeto para rastrear nomes de abas já utilizados e garantir unicidade
+            const usedNames = {}; 
+            
+            sheetsContainers.forEach((sheet, index) => {
+                // Pega o título do POP para nomear a aba do Excel
+                const titleEl = sheet.querySelector('h2');
+                let sheetName = titleEl ? titleEl.innerText.split('-')[0].trim() : `Planilha_${index + 1}`;
+                // Remove caracteres inválidos para nomes de abas no Excel
+                sheetName = sheetName.replace(/[\\/*?:\[\]]/g, '');
+                
+                // Encontra as tabelas dentro da planilha atual
+                const tables = sheet.querySelectorAll('table');
+                
+                tables.forEach((table, tIndex) => {
+                    // Clona a tabela para não afetar a interface visual
+                    const cloneTable = table.cloneNode(true);
+                    
+                    // Converte a tabela HTML para uma worksheet do Excel
+                    const ws = XLSX.utils.table_to_sheet(cloneTable);
+                    
+                    // Se houver mais de uma tabela na mesma página (ex: Temperaturas), adiciona um sufixo
+                    let desiredName = sheetName;
+                    if (tables.length > 1) {
+                        desiredName = `${sheetName}_T${tIndex + 1}`;
+                    }
+                    
+                    // Garante que o nome seja único e tenha no máximo 31 caracteres (limite do Excel)
+                    let finalSheetName = desiredName.substring(0, 31);
+                    let counter = 1;
+                    while (usedNames[finalSheetName]) {
+                        let suffix = `_${counter}`;
+                        finalSheetName = desiredName.substring(0, 31 - suffix.length) + suffix;
+                        counter++;
+                    }
+                    usedNames[finalSheetName] = true; // Marca este nome como usado
+                    
+                    // Adiciona a worksheet ao arquivo
+                    XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
+                });
+            });
+            
+            // Força o download do arquivo
+            XLSX.writeFile(wb, `Planilhas_Controle_Qualidade_IMAC.xlsx`);
+        }
+
+        function exportToWord() {
+            // Clona o container principal para podermos limpar botões sem sumir da tela
+            const content = document.getElementById('sheets-container').cloneNode(true);
+            
+            // Remove elementos que não devem ir pro Word (botões de deletar)
+            content.querySelectorAll('.no-print').forEach(el => el.remove());
+
+            // Cria um HTML básico que o Word entende (com estilos inline básicos, 
+            // pois o Word não carrega CSS externo/Tailwind corretamente)
+            const html = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>Planilhas IMAC</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 11px; }
+                        h2 { font-size: 14px; color: #000; font-weight: bold; margin-bottom: 5px; }
+                        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 9px; text-align: center; }
+                        th, td { border: 1px solid #000; padding: 3px; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        .sheet-container { page-break-after: always; margin-bottom: 20px; }
+                        .mb-4 { margin-bottom: 16px; }
+                        .mt-8 { margin-top: 32px; }
+                        /* Cores do cabeçalho */
+                        .bg-\\[\\#7A4B2D\\] { background-color: #7A4B2D; }
+                        .bg-\\[\\#f0f0f0\\] { background-color: #f0f0f0; }
+                    </style>
+                </head>
+                <body>
+                    ${content.innerHTML}
+                </body>
+                </html>
+            `;
+
+            // Transforma em um Blob do tipo Word (.doc)
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            
+            // Cria um link temporário para iniciar o download
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Planilhas_Controle_Qualidade_IMAC.doc`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // Limpa da memória
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
